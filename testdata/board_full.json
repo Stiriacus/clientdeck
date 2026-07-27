@@ -1,0 +1,57 @@
+{
+  "customer_id": "riverside-books-office",
+  "client_name": "Riverside Books & Office Ltd",
+  "language": "en",
+  "intro": "A selection of devices for your new office in London – sorted by category.",
+  "products": [
+    {
+      "category": "Office Printers",
+      "title": "Brother HL-L2375DW",
+      "recommendation": "The best balance of price and toner cost for your volume. Has run reliably for years in similar setups.",
+      "specs": { "Print engine": "Laser B/W", "Pages/min": "34", "Duplex": "yes" },
+      "rating": 3.5,
+      "affiliate_link": "https://example.com/p/123?tag=xyz",
+      "image_url": "https://example.com/img/123.jpg",
+      "price": "£179.00",
+      "badge": "Best Value",
+      "highlights": ["Laser B/W, 34 ppm", "Automatic duplex"],
+      "pros": ["Low cost per page", "Reliable for high-volume printing"],
+      "cons": ["Black & white only", "No wireless on base model"]
+    },
+    {
+      "category": "Office Printers",
+      "title": "No-name inkjet printer model with no further technical specs and an exceptionally long product name for testing purposes",
+      "recommendation": "A very detailed, deliberately oversized recommendation text meant to check how the product card handles a lot more running text than would be typical day to day – including several sentences, commas, and an em dash, so line wrapping and card height in the plain theme become visible under realistic load.",
+      "rating": 2
+    },
+    {
+      "category": "Monitors",
+      "title": "Dell P2422H",
+      "specs": { "Size": "24\"", "Resolution": "1920x1080", "Panel": "IPS" },
+      "rating": 4.5,
+      "affiliate_link": "https://example.com/p/789?tag=xyz",
+      "image_url": "https://example.com/img/789.jpg",
+      "price": "£159.00",
+      "pros": ["Excellent colour accuracy", "Fully adjustable stand"],
+      "cons": ["No built-in speakers"]
+    },
+    {
+      "category": "Monitors",
+      "title": "Desk monitor without an image",
+      "recommendation": "A good choice when no product photo is available.",
+      "specs": { "Resolution": "2560x1440", "Panel": "VA", "Curvature": "1500R" },
+      "affiliate_link": "https://example.com/p/999?tag=xyz",
+      "price": "£249.00"
+    },
+    {
+      "category": "Accessories",
+      "title": "Wireless keyboard and mouse set",
+      "recommendation": "For every desk where cable clutter is unwelcome.",
+      "rating": 5,
+      "affiliate_link": "https://example.com/p/555?tag=xyz",
+      "image_url": "https://example.com/img/555.jpg",
+      "price": "£39.90",
+      "badge": "Office Favorite"
+    }
+  ]
+}

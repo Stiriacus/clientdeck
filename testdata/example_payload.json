@@ -1,0 +1,42 @@
+{
+  "customer_id": "acme-inc",
+  "client_name": "ACME Inc.",
+  "language": "en",
+  "intro": "Hi ACME team, here are our current recommendations for your office.",
+  "products": [
+    {
+      "category": "Printers",
+      "title": "Brother HL-L2375DW",
+      "recommendation": "The best balance of price and toner cost for your volume.",
+      "specs": { "Print engine": "Laser B/W", "Pages/min": "34", "Duplex": "yes" },
+      "rating": 4.5,
+      "affiliate_link": "https://example.com/p/123?tag=xyz",
+      "image_url": "https://example.com/img/123.jpg",
+      "price": "$179.00",
+      "badge": "Best Value",
+      "highlights": ["Laser B/W, 34 pages/min", "Automatic duplex"],
+      "pros": ["Low toner cost", "Reliable in high-volume offices"],
+      "cons": ["No colour printing", "No Wi-Fi on base model"]
+    },
+    {
+      "category": "Printers",
+      "title": "HP LaserJet Pro M15w",
+      "recommendation": "A compact alternative for occasional printing at a single desk.",
+      "specs": { "Print engine": "Laser B/W", "Pages/min": "19", "Duplex": "no" },
+      "rating": 4,
+      "affiliate_link": "https://example.com/p/456?tag=xyz",
+      "image_url": "https://example.com/img/456.jpg",
+      "price": "$119.00"
+    },
+    {
+      "category": "Monitors",
+      "title": "Dell P2422H",
+      "recommendation": "Solid 24-inch office monitor with a good viewing angle and height adjustment.",
+      "specs": { "Size": "24\"", "Resolution": "1920x1080", "Panel": "IPS" },
+      "rating": 4.5,
+      "affiliate_link": "https://example.com/p/789?tag=xyz",
+      "image_url": "https://example.com/img/789.jpg",
+      "price": "$159.00"
+    }
+  ]
+}
