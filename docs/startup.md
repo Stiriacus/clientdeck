@@ -111,6 +111,12 @@ docker compose -f docker/docker-compose.prod.yml up -d
 This compose file pulls `ghcr.io/stiriacus/vitrine:latest` instead of
 building. No Go toolchain on the host.
 
+**About the `latest` tag:** CI pushes `latest` on every push to `main`
+(see `ci.yml` line 126). It's a rolling channel, not a stable point
+release. If you need a fixed version, tag a commit with `v*` in git
+and use the corresponding semver tag on GHCR
+(e.g. `ghcr.io/stiriacus/vitrine:v1.2.3`).
+
 To mount additional themes:
 
 ```yaml
