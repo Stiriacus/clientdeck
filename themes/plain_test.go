@@ -43,39 +43,45 @@ func loadCustomerView(t *testing.T, path string) board.CustomerView {
 	return v
 }
 
-// TestBoardGolden renders testdata/board_full.json, deliberately containing
-// the hard cases (mixed spec keys, a half-star rating, a product without an
-// image, a very long title/recommendation, non-ASCII characters), and
-// compares it byte-for-byte against testdata/golden/board_full.html. Run
-// with `go test ./themes/... -update` (or `make golden`) to regenerate it
-// after an intentional template/CSS change.
+// TestBoardGolden renders testdata/board_full.json in each supported
+// language and compares the output byte-for-byte against the corresponding
+// testdata/golden/board_full.<lang>.html file. Run with
+// `go test ./themes/... -update` (or `make golden`) to regenerate all
+// golden files after an intentional template/i18n/CSS change.
 func TestBoardGolden(t *testing.T) {
 	theme, bundle := loadTheme(t)
-	v := loadCustomerView(t, "../testdata/board_full.json")
-	v.Slug = "riverside-books-office-a8f9b2"
+	basePath := filepath.Join("..", "testdata", "golden", "board_full")
 
-	now := time.Date(2026, 7, 21, 12, 0, 0, 0, time.UTC)
-	view := render.BuildBoardView(v, now, bundle, "TestCompany")
+	for _, lang := range []string{"en", "de"} {
+		t.Run(lang, func(t *testing.T) {
+			v := loadCustomerView(t, "../testdata/board_full.json")
+			v.Language = lang
+			v.Slug = "riverside-books-office-a8f9b2"
 
-	var buf bytes.Buffer
-	if err := theme.RenderBoard(&buf, view); err != nil {
-		t.Fatalf("RenderBoard: %v", err)
-	}
+			now := time.Date(2026, 7, 21, 12, 0, 0, 0, time.UTC)
+			view := render.BuildBoardView(v, now, bundle, "TestCompany")
 
-	goldenPath := filepath.Join("..", "testdata", "golden", "board_full.html")
-	if *update {
-		if err := os.WriteFile(goldenPath, buf.Bytes(), 0o644); err != nil {
-			t.Fatalf("write golden: %v", err)
-		}
-		return
-	}
+			var buf bytes.Buffer
+			if err := theme.RenderBoard(&buf, view); err != nil {
+				t.Fatalf("RenderBoard: %v", err)
+			}
 
-	want, err := os.ReadFile(goldenPath)
-	if err != nil {
-		t.Fatalf("read golden: %v", err)
-	}
-	if buf.String() != string(want) {
-		t.Errorf("rendered board HTML does not match golden file %s (run with -update to refresh it after an intentional change)", goldenPath)
+			goldenPath := basePath + "." + lang + ".html"
+			if *update {
+				if err := os.WriteFile(goldenPath, buf.Bytes(), 0o644); err != nil {
+					t.Fatalf("write golden: %v", err)
+				}
+				return
+			}
+
+			want, err := os.ReadFile(goldenPath)
+			if err != nil {
+				t.Fatalf("read golden: %v", err)
+			}
+			if buf.String() != string(want) {
+				t.Errorf("rendered board HTML does not match golden file %s (run with -update to refresh it after an intentional change)", goldenPath)
+			}
+		})
 	}
 }
 
