@@ -1,0 +1,11 @@
+/vitrine
+/vitrine.db
+/vitrine.db-*
+*.test
+
+# Environment secrets
+.env
+!.env.example
+
+# Private themes (not committed)
+themes/frost/

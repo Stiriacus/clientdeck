@@ -1,0 +1,78 @@
+# ── golangci-lint Configuration ──────────────────────────────────
+# Docs: https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 3m
+  go: "1.26"
+
+linters:
+  enable:
+    # ── Default set ──────────────────────────────────────────────
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    # ── Security ─────────────────────────────────────────────────
+    - gosec
+    # ── Code quality ─────────────────────────────────────────────
+    - gocritic
+    - gocyclo
+    - nilerr
+    - unconvert
+    - unparam
+    # ── Style / typos ────────────────────────────────────────────
+    - misspell
+    - gofmt
+    - goimports
+    # ── Repeated patterns ────────────────────────────────────────
+    - goconst
+    - dupword
+
+linters-settings:
+  gocyclo:
+    min-complexity: 25
+
+  errcheck:
+    exclude-functions:
+      - (*database/sql.Tx).Rollback
+
+  goconst:
+    min-len: 4
+    min-occurrences: 3
+
+  gosec:
+    excludes:
+      - G104   # "Errors unhandled" — errcheck handles this separately
+      - G404   # math/rand in slug generation is fine (not crypto)
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+    disabled-checks:
+      - unnamedResult    # too noisy for Go idiom "if err != nil { return ... }"
+      - whyNoLint        # not needed unless we use //nolint heavily
+      - hugeParam        # passing structs by value is intentional for these types
+      - rangeValCopy     # copying small structs in range loops is acceptable
+      - exitAfterDefer   # os.Exit in main is idiomatic
+
+  misspell:
+    locale: US
+
+issues:
+  exclude-dirs:
+    - testdata
+    - themes
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - gosec
+        - goconst
+
+  # Group identical issues from the same file
+  max-same-issues: 5
+  max-issues-per-linter: 50
