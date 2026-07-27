@@ -7,7 +7,7 @@ import (
 
 // schemaVersion is tracked via PRAGMA user_version so migrate is a no-op on
 // an already-initialized database.
-const schemaVersion = 2
+const schemaVersion = 3
 
 const schemaV1 = `
 CREATE TABLE IF NOT EXISTS customer_views (
@@ -24,6 +24,10 @@ CREATE INDEX IF NOT EXISTS idx_customer_views_slug ON customer_views(slug);
 
 const schemaV2 = `
 ALTER TABLE customer_views ADD COLUMN language TEXT NOT NULL DEFAULT 'en';
+`
+
+const schemaV3 = `
+ALTER TABLE customer_views ADD COLUMN theme TEXT NOT NULL DEFAULT '';
 `
 
 // migrate applies the schema if the database's user_version is behind
@@ -53,6 +57,12 @@ func migrate(db *sql.DB) error {
 	if version < 2 {
 		if _, err := tx.Exec(schemaV2); err != nil {
 			return fmt.Errorf("store: apply v2 schema: %w", err)
+		}
+	}
+	// v2 → v3: add theme column.
+	if version < 3 {
+		if _, err := tx.Exec(schemaV3); err != nil {
+			return fmt.Errorf("store: apply v3 schema: %w", err)
 		}
 	}
 

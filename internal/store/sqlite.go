@@ -119,9 +119,9 @@ func update(ctx context.Context, tx *sql.Tx, v board.CustomerView, productsJSON 
 	}
 	_, err := tx.ExecContext(ctx, `
 		UPDATE customer_views
-		SET client_name = ?, intro = ?, language = ?, products = ?, updated_at = ?
+		SET client_name = ?, intro = ?, language = ?, theme = ?, products = ?, updated_at = ?
 		WHERE customer_id = ?`,
-		v.ClientName, v.Intro, lang, string(productsJSON), now(), v.CustomerID)
+		v.ClientName, v.Intro, lang, v.Theme, string(productsJSON), now(), v.CustomerID)
 	if err != nil {
 		return fmt.Errorf("store: update customer: %w", err)
 	}
@@ -141,9 +141,9 @@ func insertWithRetry(ctx context.Context, tx *sql.Tx, v board.CustomerView, prod
 		}
 
 		_, err = tx.ExecContext(ctx, `
-			INSERT INTO customer_views (customer_id, slug, client_name, intro, language, products, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-			v.CustomerID, slug, v.ClientName, v.Intro, lang, string(productsJSON), ts, ts)
+			INSERT INTO customer_views (customer_id, slug, client_name, intro, language, theme, products, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			v.CustomerID, slug, v.ClientName, v.Intro, lang, v.Theme, string(productsJSON), ts, ts)
 		if err == nil {
 			return slug, nil
 		}
@@ -168,9 +168,9 @@ func (s *SQLiteStore) BySlug(ctx context.Context, slug string) (board.CustomerVi
 		productsJSON string
 	)
 	err := s.db.QueryRowContext(ctx, `
-		SELECT customer_id, slug, client_name, intro, language, products
+		SELECT customer_id, slug, client_name, intro, language, theme, products
 		FROM customer_views WHERE slug = ?`, slug,
-	).Scan(&v.CustomerID, &v.Slug, &v.ClientName, &v.Intro, &v.Language, &productsJSON)
+	).Scan(&v.CustomerID, &v.Slug, &v.ClientName, &v.Intro, &v.Language, &v.Theme, &productsJSON)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
 		return board.CustomerView{}, board.ErrUnknownSlug
