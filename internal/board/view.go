@@ -13,6 +13,7 @@ type CustomerView struct {
 	ClientName string    `json:"client_name"`
 	Intro      string    `json:"intro,omitempty"`
 	Language   string    `json:"language,omitempty"`
+	Theme      string    `json:"theme,omitempty"`
 	Products   []Product `json:"products"`
 
 	// Slug is assigned by the Store on first insert and kept stable across
@@ -51,6 +52,7 @@ type BoardView struct {
 	Intro       string
 	GeneratedAt time.Time
 	Language    string
+	Theme       string
 	T           func(string) string
 	PoweredBy   string
 	Categories  []CategoryView
