@@ -1,0 +1,17 @@
+{
+  "lang": "en",
+  "product_recommendations_for": "Product recommendations for",
+  "categories": "Categories",
+  "rating_out_of_5": "Rating {{.Rating}} out of 5 stars",
+  "view_now": "View now",
+  "specification": "Specification",
+  "created_on": "Created on",
+  "created_for": "Created for",
+  "with_vitrine_by": "with Vitrine by",
+  "board_not_found": "This board doesn't exist (anymore)",
+  "board_not_found_detail": "The link is either wrong or the board was removed. Please ask whoever sent you the link for a current URL.",
+  "details": "Details",
+  "pros": "Advantages",
+  "cons": "Disadvantages",
+  "comparison": "Comparison"
+}

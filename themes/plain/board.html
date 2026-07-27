@@ -1,0 +1,98 @@
+{{define "title"}}{{.ClientName}} – {{call $.T "product_recommendations_for"}}{{end}}
+
+{{define "content"}}
+<header class="site-header">
+  <div class="wrap">
+    <p class="eyebrow">{{call $.T "product_recommendations_for"}}</p>
+    <h1>{{.ClientName}}</h1>
+    {{if .Intro}}<p class="intro">{{.Intro}}</p>{{end}}
+  </div>
+</header>
+
+<main class="wrap">
+  {{if gt (len .Categories) 1}}
+  <nav class="category-nav" aria-label="{{call $.T "categories"}}">
+    {{range .Categories}}<a href="#{{.Anchor}}">{{.Name}}</a>{{end}}
+  </nav>
+  {{end}}
+
+  {{range $c := .Categories}}
+  <section id="{{$c.Anchor}}" class="category" aria-label="{{$c.Name}}">
+    <h2 class="category-title">{{$c.Name}}</h2>
+
+    <div class="product-grid">
+      {{range $c.Products}}
+      <article class="product-card">
+        {{if .Badge}}<span class="badge">{{.Badge}}</span>{{end}}
+        <div class="product-image">
+          {{if .ImageURL}}
+          <img src="{{.ImageURL}}" alt="{{.Title}}" loading="lazy" referrerpolicy="no-referrer">
+          {{else}}
+          <div class="product-image-placeholder" aria-hidden="true"></div>
+          {{end}}
+        </div>
+        <h3 class="product-title">{{.Title}}</h3>
+        {{if .Stars}}
+        <div class="stars" role="img" aria-label="Rating {{.Rating}} out of 5 stars">
+          {{range .Stars}}<span class="star star--{{.}}" aria-hidden="true"></span>{{end}}
+          <span class="rating-value">{{.Rating}}</span>
+        </div>
+        {{end}}
+        {{if .Price}}<p class="price">{{.Price}}</p>{{end}}
+
+        {{if .Highlights}}
+        <ul class="highlights">
+          {{range .Highlights}}<li>{{.}}</li>{{end}}
+        </ul>
+        {{end}}
+
+        {{if .AffiliateLink}}
+        <a class="btn-affiliate" href="{{.AffiliateLink}}" target="_blank" rel="nofollow sponsored noopener">
+          {{call $.T "view_now"}}
+        </a>
+        {{end}}
+
+        {{if or .Recommendation .Specs .Pros .Cons}}
+        <details class="product-details">
+          <summary><span>{{call $.T "details"}}</span></summary>
+          <div class="details-content">
+            {{if .Recommendation}}
+            <p class="recommendation">{{.Recommendation}}</p>
+            {{end}}
+
+            {{if .Specs}}
+            <dl class="spec-list">
+              {{range $k, $v := .Specs}}
+              <dt>{{$k}}</dt>
+              <dd>{{$v}}</dd>
+              {{end}}
+            </dl>
+            {{end}}
+
+            {{if .Pros}}
+            <h4 class="procon-heading procon-heading--pros">{{call $.T "pros"}}</h4>
+            <ul class="procon pros">
+              {{range .Pros}}<li>{{.}}</li>{{end}}
+            </ul>
+            {{end}}
+
+            {{if .Cons}}
+            <h4 class="procon-heading procon-heading--cons">{{call $.T "cons"}}</h4>
+            <ul class="procon cons">
+              {{range .Cons}}<li>{{.}}</li>{{end}}
+            </ul>
+            {{end}}
+          </div>
+        </details>
+        {{end}}
+      </article>
+      {{end}}
+    </div>
+  </section>
+  {{end}}
+</main>
+
+<footer class="site-footer">
+  <p class="wrap">{{call $.T "created_on"}} {{formatDate .GeneratedAt}} · vitrine</p>
+</footer>
+{{end}}
