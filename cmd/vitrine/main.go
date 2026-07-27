@@ -1,8 +1,10 @@
 // Command vitrine runs the vitrine HTTP service: config → store →
-// theme → services → router → server, with graceful shutdown on
-// SIGINT/SIGTERM. VITRINE_DEV support (disk-backed, reloading themes and
-// the /c/demo route) is kept entirely in this file. Internal/ code never
-// sees a dev flag, only the fs.FS and services it's handed.
+// themes → services → router → server, with graceful shutdown on
+// SIGINT/SIGTERM. Themes are loaded at startup from both the embedded
+// "plain" theme and any directories found in VITRINE_THEMES_DIR.
+// VITRINE_DEV enables per-request template reloading for theme development
+// (keep the /c/demo route). Internal/ code never sees a dev flag, only
+// the fs.FS and services it's handed.
 package main
 
 import (
@@ -10,7 +12,6 @@ import (
 	cryptorand "crypto/rand"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -41,7 +42,7 @@ func main() {
 	logger := newLogger(cfg.LogLevel)
 	slog.SetDefault(logger)
 	if cfg.Dev {
-		logger.Warn("VITRINE_DEV enabled: templates and static assets reload from disk on every request. Do not use in production")
+		logger.Warn("VITRINE_DEV enabled: templates reload from disk on every request. Do not use in production")
 	}
 
 	st, err := store.Open(cfg.DBPath)
@@ -51,46 +52,10 @@ func main() {
 	}
 	defer st.Close()
 
-	themeFS, err := loadThemeFS(cfg)
-	if err != nil {
-		logger.Error("failed to load theme", "error", err)
-		os.Exit(1)
-	}
-	staticFS, err := fs.Sub(themeFS, "static")
-	if err != nil {
-		logger.Error("failed to load theme static assets", "error", err)
-		os.Exit(1)
-	}
+	// Build the theme registry.
+	registry := buildRegistry(cfg, logger)
 
-	var (
-		renderer board.Renderer
-		bundle   *i18n.Bundle
-	)
-	if cfg.Dev {
-		// In dev mode, load the bundle once so reloadingRenderer can use it.
-		// Templates are still re-parsed on every request.
-		i18nFS, err := fs.Sub(themeFS, "i18n")
-		if err != nil {
-			logger.Error("failed to locate i18n directory in theme", "error", err)
-			os.Exit(1)
-		}
-		b, err := i18n.Load(i18nFS)
-		if err != nil {
-			logger.Error("failed to load i18n bundle", "error", err)
-			os.Exit(1)
-		}
-		bundle = b
-		renderer = &reloadingRenderer{fsys: themeFS, bundle: bundle}
-	} else {
-		theme, b, err := render.LoadTheme(themeFS)
-		if err != nil {
-			logger.Error("failed to parse theme templates", "error", err)
-			os.Exit(1)
-		}
-		bundle = b
-		renderer = theme
-	}
-	renderSvc := render.NewService(renderer, bundle, cfg.PoweredBy)
+	renderSvc := render.NewService(registry, cfg.PoweredBy)
 
 	slugs := slug.New(cryptorand.Reader)
 	ingestSvc := ingest.New(st, slugs)
@@ -104,7 +69,7 @@ func main() {
 		Store:         st,
 		Ingest:        ingestSvc,
 		Render:        renderSvc,
-		StaticFS:      staticFS,
+		StaticFS:      registry.MergedStaticFS(),
 		WebhookSecret: cfg.WebhookSecret,
 		BaseURL:       cfg.BaseURL,
 		Logger:        logger,
@@ -119,7 +84,7 @@ func main() {
 
 	errCh := make(chan error, 1)
 	go func() {
-		logger.Info("starting vitrine", "addr", cfg.Addr, "theme", cfg.Theme)
+		logger.Info("starting vitrine", "addr", cfg.Addr, "theme", cfg.Theme, "themes_dir", cfg.ThemesDir)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errCh <- err
 		}
@@ -146,6 +111,95 @@ func main() {
 	}
 }
 
+// buildRegistry loads all available themes and returns a Registry.
+// It always loads the embedded "plain" theme as a guaranteed fallback.
+// In dev mode, the configured theme is loaded from disk with per-request
+// template reloading. When VITRINE_THEMES_DIR is set (production), every
+// subdirectory is loaded as a theme once at startup.
+func buildRegistry(cfg config.Config, logger *slog.Logger) *render.Registry {
+	registry := render.NewRegistry(cfg.Theme)
+
+	// 1. Always embed "plain" as a guaranteed fallback.
+	plainFS, err := themes.Plain()
+	if err != nil {
+		logger.Error("failed to access embedded plain theme", "error", err)
+		os.Exit(1)
+	}
+	plainTheme, _, err := render.LoadTheme(plainFS)
+	if err != nil {
+		logger.Error("failed to parse embedded plain theme", "error", err)
+		os.Exit(1)
+	}
+	plainStatic, _ := fs.Sub(plainFS, "static")
+	registry.Register("plain", plainTheme, plainStatic)
+	logger.Info("loaded embedded theme", "name", "plain")
+
+	// 2. Dev mode: load the configured theme from disk with hot-reload.
+	if cfg.Dev {
+		themesRoot := "themes"
+		if cfg.ThemesDir != "" {
+			themesRoot = cfg.ThemesDir
+		}
+		// Load i18n once (not hot-reloaded).
+		themeFS, err := fs.Sub(os.DirFS(themesRoot), cfg.Theme)
+		if err != nil {
+			logger.Error("dev: theme directory not found", "name", cfg.Theme, "root", themesRoot, "error", err)
+			os.Exit(1)
+		}
+		i18nSub, err := fs.Sub(themeFS, "i18n")
+		if err != nil {
+			logger.Error("dev: theme missing i18n directory", "name", cfg.Theme, "error", err)
+			os.Exit(1)
+		}
+		devBundle, err := i18n.Load(i18nSub)
+		if err != nil {
+			logger.Error("dev: failed to load i18n bundle", "name", cfg.Theme, "error", err)
+			os.Exit(1)
+		}
+		// Cache the static FS so it's not re-read on every request.
+		devStatic, _ := fs.Sub(themeFS, "static")
+		registry.Register(cfg.Theme, devTheme(cfg.Theme, themeFS, devBundle, logger), devStatic)
+		registry.SetDevTheme(cfg.Theme, themeFS)
+		logger.Info("dev: loaded theme with hot-reload", "name", cfg.Theme, "root", themesRoot)
+		return registry
+	}
+
+	// 3. Production: scan VITRINE_THEMES_DIR for additional themes.
+	if cfg.ThemesDir != "" {
+		entries, err := os.ReadDir(cfg.ThemesDir)
+		if err != nil {
+			logger.Warn("cannot read themes directory, using only embedded themes",
+				"path", cfg.ThemesDir, "error", err)
+			return registry
+		}
+		for _, entry := range entries {
+			if !entry.IsDir() || entry.Name() == "plain" {
+				continue
+			}
+			if err := registry.LoadThemeFromDir(entry.Name(), os.DirFS(cfg.ThemesDir)); err != nil {
+				logger.Warn("failed to load theme, skipping", "name", entry.Name(), "error", err)
+				continue
+			}
+			logger.Info("loaded theme from disk", "name", entry.Name())
+		}
+	}
+
+	return registry
+}
+
+// devTheme wraps a theme name so its static filesystem can be cached while
+// templates are reloaded on every request via Registry.SetDevTheme.
+// The returned theme is used for static FS registration only; the actual
+// template rendering uses the dev-mode re-parse path in the Registry.
+func devTheme(name string, themeFS fs.FS, bundle *i18n.Bundle, logger *slog.Logger) *render.Theme {
+	theme, _, err := render.LoadTheme(themeFS)
+	if err != nil {
+		logger.Error("dev: failed to parse theme", "name", name, "error", err)
+		os.Exit(1)
+	}
+	return theme
+}
+
 func newLogger(level string) *slog.Logger {
 	var lvl slog.Level
 	switch strings.ToLower(level) {
@@ -159,45 +213,6 @@ func newLogger(level string) *slog.Logger {
 		lvl = slog.LevelInfo
 	}
 	return slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: lvl}))
-}
-
-// loadThemeFS resolves cfg.Theme to an fs.FS rooted at the theme directory
-// itself. In dev mode it reads from disk (themes/<name>), so edits are
-// picked up on the next request; otherwise it uses the embedded "plain"
-// theme, the only one built into the binary.
-func loadThemeFS(cfg config.Config) (fs.FS, error) {
-	if cfg.Dev {
-		return fs.Sub(os.DirFS("themes"), cfg.Theme)
-	}
-	if cfg.Theme != "plain" {
-		return nil, fmt.Errorf("unknown embedded theme %q (only \"plain\" is built in; set VITRINE_DEV=true to load a theme from disk)", cfg.Theme)
-	}
-	return themes.Plain()
-}
-
-// reloadingRenderer implements board.Renderer by parsing the theme fresh on
-// every call, so VITRINE_DEV picks up template/CSS edits without a
-// rebuild or restart. It uses a pre-loaded i18n bundle so translations don't
-// need to be in the template re-parse path.
-type reloadingRenderer struct {
-	fsys   fs.FS
-	bundle *i18n.Bundle
-}
-
-func (r *reloadingRenderer) RenderBoard(w io.Writer, v board.BoardView) error {
-	theme, _, err := render.LoadTheme(r.fsys)
-	if err != nil {
-		return err
-	}
-	return theme.RenderBoard(w, v)
-}
-
-func (r *reloadingRenderer) RenderNotFound(w io.Writer, lang string) error {
-	theme, _, err := render.LoadTheme(r.fsys)
-	if err != nil {
-		return err
-	}
-	return theme.RenderNotFound(w, lang)
 }
 
 // handleDemo serves VITRINE_DEMO_PAYLOAD at /c/demo: re-read, validate
