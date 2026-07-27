@@ -51,7 +51,8 @@ All variables use the `VITRINE_` prefix:
 | `VITRINE_DB_PATH` | `./vitrine.db` | – | Path to the SQLite file |
 | `VITRINE_WEBHOOK_SECRET` | – | **yes** | Shared secret for `X-Webhook-Secret`, min. 32 characters |
 | `VITRINE_BASE_URL` | – | **yes** | Base URL for the `url` in the webhook response, e.g. `https://boards.example.com` |
-| `VITRINE_THEME` | `plain` | – | Theme name (only `plain` is embedded; other names require `VITRINE_DEV=true`) |
+| `VITRINE_THEME` | `plain` | – | Theme name — the default/fallback theme for customers without a specific assignment |
+| `VITRINE_THEMES_DIR` | – | – | Directory containing theme subdirectories (e.g. `/themes`). Each subdirectory is loaded as a theme at startup, no `VITRINE_DEV` required. Enables per-customer theme assignment via the `"theme"` field in the webhook payload. |
 | `VITRINE_LOG_LEVEL` | `info` | – | `debug`, `info`, `warn`, or `error` |
 | `VITRINE_DEV` | `false` | – | Dev mode, see below |
 | `VITRINE_DEMO_PAYLOAD` | – | – | Path to a JSON file, only together with `VITRINE_DEV=true` |

@@ -55,6 +55,7 @@ configurations.
 | `client_name` | yes | string | ≤ 120 characters. |
 | `intro` | – | string | Free text. |
 | `language` | – | string, BCP 47 | e.g. `"en"`, `"fr"`, `"fr-CH"`. Defaults to `"en"` when empty. Controls the HTML `lang` attribute and all translated UI strings on the rendered board. |
+| `theme` | – | string | Theme name to render this customer's board with, e.g. `"frost"`. The theme must be registered (embedded `"plain"` always is; others are loaded from `VITRINE_THEMES_DIR`). When omitted or referencing an unknown theme, the value of `VITRINE_THEME` is used as fallback. |
 | `products` | yes | array, ≥ 1, ≤ 100 | See below. |
 | `products[].category` | yes | string | Determines tab membership and order (first appearance in the array). |
 | `products[].title` | yes | string | ≤ 200 characters. |

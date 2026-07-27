@@ -42,14 +42,11 @@ engine.
    templates and `static/` fresh from disk on every request
    (`os.DirFS("themes")` + `fs.Sub(..., "mytheme")`). No rebuild needed,
    see `README.md`.
-4. For production use: the theme would need to be embedded into the binary
-   via `embed.FS`, like `plain` (currently only `plain` is embedded, see
-   `themes/embed.go`). A proprietary theme can instead be run permanently
-   with `VITRINE_DEV=true` and a fixed theme directory on the server,
-   without forking the binary. That's the reason the theme system is built
-   on an `fs.FS` interface instead of hardcoded templates. This is how, for
-   example, a non-public "Frost Clarity" theme runs without needing to live
-   in this repo.
+4. For production: mount your theme directories via Docker volume and set
+   `VITRINE_THEMES_DIR=/themes`. Every subdirectory is loaded as a theme
+   at startup — no `VITRINE_DEV` required. The embedded `"plain"` theme
+   is always available as fallback. Multiple themes can coexist; customers
+   are assigned a theme via the `"theme"` field in the webhook payload.
 
 ## The view model
 
@@ -63,8 +60,10 @@ type BoardView struct {
     Slug        string
     Intro       string
     GeneratedAt time.Time
-    Language    string            // BCP 47, e.g. "en" or "fr", set on <html lang>
+    Language    string              // BCP 47, e.g. "en" or "fr", set on <html lang>
+    Theme       string              // resolved theme name, e.g. "plain" or "frost"
     T           func(string) string // translation lookup: {{call $.T "key"}}
+    PoweredBy   string              // from VITRINE_POWERED_BY, shown in footer
     Categories  []CategoryView
 }
 
@@ -116,6 +115,10 @@ Rules a theme can rely on (details/derivation in
   decided by the theme via `{{if .Stars}}`.
 - **`Language`** is the board's BCP 47 language tag (default `"en"`). Set it
   on `<html lang="{{.Language}}">`.
+- **`Theme`** is the resolved theme name (e.g. `"plain"`, `"frost"`). Use
+  `{{.Theme}}` for conditional rendering or per-theme static asset paths
+  if needed, though all themes share `/static/` via a merged filesystem.
+- **`PoweredBy`** is the branding string from `VITRINE_POWERED_BY`.
 - **`T`** is the translation function: `{{call $.T "key"}}` in templates
   (note the `call` builtin. Struct field functions can't be invoked directly
   in Go templates). Fallback chain: requested language → `"en"` → raw key.

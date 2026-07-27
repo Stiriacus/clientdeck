@@ -16,10 +16,11 @@ services:
       - ../.env
     volumes:
       - vitrine-data:/data
-      # Mount custom themes here. Only "plain" is embedded in the binary.
-      # To use a custom theme like "frost", uncomment the line below AND
-      # set VITRINE_DEV=true + VITRINE_THEME=frost in your .env file.
-      # - ../themes/frost:/themes/frost:ro
+      # Mount your themes directory. Each subdirectory becomes a theme name
+      # available for per-customer assignment. Only "plain" is embedded in the
+      # binary. Set VITRINE_THEMES_DIR=/themes and VITRINE_THEME=<name> in
+      # your .env file. No VITRINE_DEV needed — themes are loaded at startup.
+      # - ../themes:/themes:ro
     restart: unless-stopped
 
 volumes:
