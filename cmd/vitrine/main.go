@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -174,6 +175,11 @@ func buildRegistry(cfg config.Config, logger *slog.Logger) *render.Registry {
 		}
 		for _, entry := range entries {
 			if !entry.IsDir() || entry.Name() == "plain" {
+				continue
+			}
+			themePath := filepath.Join(cfg.ThemesDir, entry.Name())
+			if err := themes.ValidateDir(themePath); err != nil {
+				logger.Warn("theme validation failed, skipping", "name", entry.Name(), "error", err)
 				continue
 			}
 			if err := registry.LoadThemeFromDir(entry.Name(), os.DirFS(cfg.ThemesDir)); err != nil {

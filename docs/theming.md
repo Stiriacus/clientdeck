@@ -164,3 +164,33 @@ returns raw, unescaped HTML.
 `board.html`, `notfound.html` plus `static/style.css`. `themes/plain_test.go`
 also shows how a theme is tested against golden files and XSS payloads
 (`make golden` rewrites the golden files after an intentional change).
+
+## Validating custom themes
+
+vitrine ships with a validation helper and a test runner for local
+(non-embedded) themes. The test discovers every theme directory under
+`themes/` (except `plain`, which is tested separately) and validates it
+with the same `render.LoadTheme` path used at runtime — full `FuncMap`,
+template parsing, and i18n loading.
+
+```bash
+# Validate all local themes
+go test ./themes/ -run TestLocalThemes -v
+```
+
+This test passes trivially in CI (where no local themes exist), so it will
+never break your build. When a theme is invalid, the test prints a specific
+error message and the file that caused it.
+
+You can also validate a single directory programmatically:
+
+```go
+import "github.com/Stiriacus/vitrine/themes"
+
+if err := themes.ValidateDir("/path/to/my-theme"); err != nil {
+    log.Fatal(err)
+}
+```
+
+See `themes/README.md` for the directory structure and how to set up a
+custom theme.
