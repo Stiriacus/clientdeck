@@ -16,6 +16,7 @@ import (
 // use {{.T}} and {{.Language}} like the board template.
 type notFoundData struct {
 	Language string
+	Theme    string
 	T        func(string) string
 }
 
@@ -74,8 +75,15 @@ func (t *Theme) RenderBoard(w io.Writer, v board.BoardView) error {
 
 // RenderNotFound renders the theme's 404 page in the given language.
 func (t *Theme) RenderNotFound(w io.Writer, lang string) error {
+	return t.RenderNotFoundWithTheme(w, lang, "")
+}
+
+// RenderNotFoundWithTheme renders the 404 page with the resolved theme name
+// available as {{.Theme}} in the template.
+func (t *Theme) RenderNotFoundWithTheme(w io.Writer, lang, themeName string) error {
 	data := notFoundData{
 		Language: lang,
+		Theme:    themeName,
 		T:        func(key string) string { return t.bundle.T(lang, key) },
 	}
 	return t.notFound.ExecuteTemplate(w, "layout.html", data)

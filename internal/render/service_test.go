@@ -9,11 +9,13 @@ import (
 )
 
 func TestService_RenderBoard_BuildsViewModel(t *testing.T) {
-	theme, bundle, err := LoadTheme(fakeThemeFS())
+	theme, _, err := LoadTheme(fakeThemeFS())
 	if err != nil {
 		t.Fatalf("LoadTheme: %v", err)
 	}
-	svc := NewService(theme, bundle, "TestCompany")
+	reg := NewRegistry("plain")
+	reg.Register("plain", theme, nil)
+	svc := NewService(reg, "TestCompany")
 
 	v := board.CustomerView{
 		ClientName: "ACME Corp",
@@ -32,11 +34,13 @@ func TestService_RenderBoard_BuildsViewModel(t *testing.T) {
 }
 
 func TestService_RenderNotFound(t *testing.T) {
-	theme, bundle, err := LoadTheme(fakeThemeFS())
+	theme, _, err := LoadTheme(fakeThemeFS())
 	if err != nil {
 		t.Fatalf("LoadTheme: %v", err)
 	}
-	svc := NewService(theme, bundle, "TestCompany")
+	reg := NewRegistry("plain")
+	reg.Register("plain", theme, nil)
+	svc := NewService(reg, "TestCompany")
 
 	var buf bytes.Buffer
 	if err := svc.RenderNotFound(&buf, "en"); err != nil {
