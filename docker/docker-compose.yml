@@ -1,0 +1,16 @@
+services:
+  vitrine:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: vitrine
+    ports:
+      - "${VITRINE_ADDR:-8080}:8080"
+    env_file:
+      - ../.env
+    volumes:
+      - vitrine-data:/data
+    restart: unless-stopped
+
+volumes:
+  vitrine-data:

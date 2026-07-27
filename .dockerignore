@@ -1,0 +1,33 @@
+# Git
+.git/
+.github/
+
+# Build artifact
+/vitrine
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Docs and dev files
+docs/
+*.md
+!README.md
+
+# Tests
+testdata/
+*_test.go
+
+# Environment (keep secrets out of the image)
+.env
+.env.*
+!.env.example
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+
+# Claude
+.claude/
