@@ -48,7 +48,7 @@ func newTestRouter(t *testing.T) http.Handler {
 	if err != nil {
 		t.Fatalf("themes.Plain: %v", err)
 	}
-	theme, bundle, err := render.LoadTheme(themeFS)
+	theme, _, err := render.LoadTheme(themeFS)
 	if err != nil {
 		t.Fatalf("LoadTheme: %v", err)
 	}
@@ -59,13 +59,16 @@ func newTestRouter(t *testing.T) http.Handler {
 
 	slugs := slug.New(rand.Reader)
 	ingestSvc := ingest.New(st, slugs)
-	renderSvc := render.NewService(theme, bundle, "TestCompany")
+
+	registry := render.NewRegistry("plain")
+	registry.Register("plain", theme, staticFS)
+	renderSvc := render.NewService(registry, "TestCompany")
 
 	return httpapi.NewRouter(httpapi.Deps{
 		Store:         st,
 		Ingest:        ingestSvc,
 		Render:        renderSvc,
-		StaticFS:      staticFS,
+		StaticFS:      registry.MergedStaticFS(),
 		WebhookSecret: testSecret,
 		BaseURL:       testBaseURL,
 		Logger:        discardLogger(),
@@ -275,7 +278,7 @@ func TestPanicRecovery(t *testing.T) {
 	if err != nil {
 		t.Fatalf("themes.Plain: %v", err)
 	}
-	theme, bundle, err := render.LoadTheme(themeFS)
+	theme, _, err := render.LoadTheme(themeFS)
 	if err != nil {
 		t.Fatalf("LoadTheme: %v", err)
 	}
@@ -284,11 +287,13 @@ func TestPanicRecovery(t *testing.T) {
 		t.Fatalf("fs.Sub static: %v", err)
 	}
 
+	registry := render.NewRegistry("plain")
+	registry.Register("plain", theme, staticFS)
 	h := httpapi.NewRouter(httpapi.Deps{
 		Store:         panicStore{},
 		Ingest:        ingest.New(panicStore{}, slug.New(rand.Reader)),
-		Render:        render.NewService(theme, bundle, "TestCompany"),
-		StaticFS:      staticFS,
+		Render:        render.NewService(registry, "TestCompany"),
+		StaticFS:      registry.MergedStaticFS(),
 		WebhookSecret: testSecret,
 		BaseURL:       testBaseURL,
 		Logger:        discardLogger(),

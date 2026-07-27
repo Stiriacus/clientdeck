@@ -31,7 +31,7 @@ type webhookResponse struct {
 // knownTopLevelFields and knownProductFields list the wire keys board.CustomerView
 // and board.Product actually bind, so ignoredFields can report anything else.
 var knownTopLevelFields = map[string]bool{
-	"customer_id": true, "client_name": true, "intro": true, "language": true, "products": true,
+	"customer_id": true, "client_name": true, "intro": true, "language": true, "theme": true, "products": true,
 }
 
 var knownProductFields = map[string]bool{
