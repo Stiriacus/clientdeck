@@ -1,0 +1,26 @@
+# Production compose — pulls the pre-built image from GHCR.
+# No Go toolchain, no build step. Just Docker and the image.
+#
+# Usage:
+#   cp .env.example .env
+#   # Edit .env with real values
+#   docker compose -f docker/docker-compose.prod.yml up -d
+
+services:
+  vitrine:
+    image: ghcr.io/stiriacus/vitrine:latest
+    container_name: vitrine
+    ports:
+      - "${VITRINE_ADDR:-8080}:8080"
+    env_file:
+      - ../.env
+    volumes:
+      - vitrine-data:/data
+      # Mount custom themes here. Only "plain" is embedded in the binary.
+      # To use a custom theme like "frost", uncomment the line below AND
+      # set VITRINE_DEV=true + VITRINE_THEME=frost in your .env file.
+      # - ../themes/frost:/themes/frost:ro
+    restart: unless-stopped
+
+volumes:
+  vitrine-data:
