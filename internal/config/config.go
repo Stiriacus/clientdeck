@@ -11,10 +11,11 @@ import (
 const (
 	minSecretLen = 32
 
-	defaultAddr     = ":8080"
-	defaultDBPath   = "./vitrine.db"
-	defaultTheme    = "plain"
-	defaultLogLevel = "info"
+	defaultAddr       = ":8080"
+	defaultDBPath     = "./vitrine.db"
+	defaultTheme      = "plain"
+	defaultLogLevel   = "info"
+	defaultThemesDir  = "/themes"
 )
 
 // Config holds the fully validated runtime configuration.
@@ -28,6 +29,7 @@ type Config struct {
 	Dev           bool
 	DemoPayload   string
 	PoweredBy     string
+	ThemesDir     string // directory containing theme subdirectories (optional, defaults to "")
 }
 
 // Load reads and validates configuration from the environment. It never
@@ -42,6 +44,7 @@ func Load() (Config, error) {
 		LogLevel:      getEnv("VITRINE_LOG_LEVEL", defaultLogLevel),
 		DemoPayload:   os.Getenv("VITRINE_DEMO_PAYLOAD"),
 		PoweredBy:     getEnv("VITRINE_POWERED_BY", "MyCompany"),
+		ThemesDir:     os.Getenv("VITRINE_THEMES_DIR"),
 	}
 
 	if cfg.WebhookSecret == "" {
