@@ -151,14 +151,14 @@ func buildRegistry(cfg config.Config, logger *slog.Logger) *render.Registry {
 			logger.Error("dev: theme missing i18n directory", "name", cfg.Theme, "error", err)
 			os.Exit(1)
 		}
-		devBundle, err := i18n.Load(i18nSub)
+		_, err = i18n.Load(i18nSub)
 		if err != nil {
 			logger.Error("dev: failed to load i18n bundle", "name", cfg.Theme, "error", err)
 			os.Exit(1)
 		}
 		// Cache the static FS so it's not re-read on every request.
 		devStatic, _ := fs.Sub(themeFS, "static")
-		registry.Register(cfg.Theme, devTheme(cfg.Theme, themeFS, devBundle, logger), devStatic)
+		registry.Register(cfg.Theme, devTheme(cfg.Theme, themeFS, logger), devStatic)
 		registry.SetDevTheme(cfg.Theme, themeFS)
 		logger.Info("dev: loaded theme with hot-reload", "name", cfg.Theme, "root", themesRoot)
 		return registry
@@ -191,7 +191,7 @@ func buildRegistry(cfg config.Config, logger *slog.Logger) *render.Registry {
 // templates are reloaded on every request via Registry.SetDevTheme.
 // The returned theme is used for static FS registration only; the actual
 // template rendering uses the dev-mode re-parse path in the Registry.
-func devTheme(name string, themeFS fs.FS, bundle *i18n.Bundle, logger *slog.Logger) *render.Theme {
+func devTheme(name string, themeFS fs.FS, logger *slog.Logger) *render.Theme {
 	theme, _, err := render.LoadTheme(themeFS)
 	if err != nil {
 		logger.Error("dev: failed to parse theme", "name", name, "error", err)

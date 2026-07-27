@@ -11,11 +11,11 @@ import (
 const (
 	minSecretLen = 32
 
-	defaultAddr       = ":8080"
-	defaultDBPath     = "./vitrine.db"
-	defaultTheme      = "plain"
-	defaultLogLevel   = "info"
-	defaultThemesDir  = "/themes"
+	defaultAddr      = ":8080"
+	defaultDBPath    = "./vitrine.db"
+	defaultTheme     = "plain"
+	defaultLogLevel  = "info"
+	defaultThemesDir = "/themes"
 )
 
 // Config holds the fully validated runtime configuration.

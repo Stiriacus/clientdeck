@@ -9,13 +9,13 @@ import (
 // Registry holds multiple loaded themes and provides lookup by name.
 // The embedded "plain" theme is always registered so there is always a
 // guaranteed fallback. All themes are loaded at startup and the Registry
-// is read-only thereafter, so no synchronisation is needed.
+// is read-only thereafter, so no synchronization is needed.
 // When a theme name is registered via SetDevTheme, Get re-parses its
 // templates from disk on every call, supporting hot-reload during
 // theme development.
 type Registry struct {
-	themes    map[string]*Theme
-	staticFSs map[string]fs.FS
+	themes       map[string]*Theme
+	staticFSs    map[string]fs.FS
 	defaultTheme string
 	// Dev-theme filesystem: when non-nil, Get re-parses templates from
 	// this FS instead of using the cached theme.
@@ -78,7 +78,7 @@ func (r *Registry) Get(name string) (*Theme, bool) {
 		}
 		return theme, ok
 	}
-	theme, _ := r.themes[name]
+	theme := r.themes[name]
 	return theme, true
 }
 
