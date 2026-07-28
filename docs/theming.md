@@ -2,7 +2,8 @@
 
 vitrine renders boards through a swappable `Renderer` interface. The
 embedded default theme is "plain" (`themes/plain/`), plain, unbranded, no
-JS and no external fonts. This document describes the contract that a
+JS and no external requests — its Roboto webfont is self-hosted under
+`static/fonts/` and embedded into the binary. This document describes the contract that a
 custom (including proprietary) theme is built against.
 
 ## The `Renderer` interface
